@@ -1,0 +1,30 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options{  static = true;
+  LOOKAHEAD = 2;}PARSER_BEGIN(Parser)package parser;
+
+public class Parser{  public static void main(String args []) throws ParseException  {    Parser parser = new Parser(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("graph 20160237 (inputs) -> (outputs) {...} :");
+      try      {	      Parser.grammer();      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        MyNewGrammar.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}PARSER_END(Parser)SKIP :{  " "| "\r"| "\t"| "\n"}TOKEN : /* NNEF IDENTIFIER */{ 	< GRAPH : "graph" >
+| 	< RESHAPE : "reshape" >
+|	< VARIABLE : "variable" >
+| 	< CONV : "conv" >
+| 	< ADD : "add" >
+| 	< RELU : "relu" >
+| 	< MAX_POOL: "max_pool" >}
+TOKEN : /*TF IDENTIFIER*/
+{
+  	< RESULT : "result" >
+ | 	< TF_RESHAPE : "tf.reshape" >
+ | 	< TF_VARIABLE : "tf.Variable" >
+ | 	< TF_RANDOM_NORMAL : "tf.random_normal" >
+ |  < TF_CONV : "tf.nn.conv2d" >
+ |  < TF_ADD : "tf.add" >
+ | 	< TF_MAX_POOL : "tf.max_pool" >}TOKEN : /* OPERATOR */{   	< ARROW : "->" >}
+
+TOKEN: 
+{
+	< IDENTIFIER : (["a"-"z"])+(<DIGIT>)* >
+| 	< CONSTANT : (< DIGIT >)+ >
+| 	< #DIGIT : [ "0"-"9" ] >
+}
+int grammer() :{}{  sum() ";"  {    return 0;  }| ";"  {    return 1;  }}void sum() :{}{  term()  (    (      < PLUS >    | < MINUS >    )    term()  )*}void term() :{}{  unary()  (    (      < MULTIPLY >    | < DIVIDE >    )    unary()  )*}void unary() :{}{  < MINUS > element()| element()}void element() :{}{  < CONSTANT >| "(" sum() ")"}
