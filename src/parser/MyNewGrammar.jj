@@ -1,52 +1,156 @@
 /**
  * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
- */options{  static = true;
-  LOOKAHEAD = 2;}PARSER_BEGIN(Parser)package parser;
+ */
 
-public class Parser{  public static void main(String args []) throws ParseException  {    Parser parser = new Parser(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("graph 20160237 (inputs) -> (outputs) {...} :");
-      try      {	     Parser.start();      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        MyNewGrammar.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}PARSER_END(Parser)SKIP :{  " "| "\r"| "\t"| "\n"}TOKEN : /* NNEF IDENTIFIER */{ 	< GRAPH : "graph" >
+// 20160237 안지수
+options
+{
+  static = true;
+  LOOKAHEAD = 2;
+}
+
+PARSER_BEGIN(Parser)
+package parser;
+
+public class Parser
+{
+  public static void main(String args []) throws ParseException
+  {
+    Parser parser = new Parser(System.in);
+    while (true)
+    {
+      System.out.println("Reading from standard input...");
+      System.out.print("graph 20160237 (inputs) -> (outputs) {...} :");
+
+      try
+      {
+	     Parser.start();
+      }
+      catch (Exception e)
+      {
+        System.out.println("NOK.");
+        System.out.println(e.getMessage());
+        MyNewGrammar.ReInit(System.in);
+      }
+      catch (Error e)
+      {
+        System.out.println("Oops.");
+        System.out.println(e.getMessage());
+        break;
+      }
+    }
+  }
+}
+
+PARSER_END(Parser)
+
+SKIP :
+{
+  " "
+| "\r"
+| "\t"
+| "\n"
+}
+
+TOKEN : /* NNEF IDENTIFIER */
+{
+ 	< GRAPH : "graph" >
 | 	< RESHAPE : "reshape" >
 |	< VARIABLE : "variable" >
 | 	< CONV : "conv" >
 | 	< ADD : "add" >
 | 	< RELU : "relu" >
-| 	< MAX_POOL: "max_pool" >}
+| 	< MAX_POOL: "max_pool" >
+}
 
-TOKEN : /*TF IDENTIFIER*/
- {
-	< RESULT : "result" >
- | 	< TF_RESHAPE : "tf.reshape" >
- | 	< TF_VARIABLE : "tf.Variable" >
- | 	< TF_RANDOM_NORMAL : "tf.random_normal" >
- |  < TF_CONV : "tf.nn.conv2d" >
- |  < TF_ADD : "tf.add" >
- | 	< TF_MAX_POOL : "tf.max_pool" >}
 
-TOKEN : /* OPERATOR */{   	< ARROW : "->" >
-| 	< SEMICOLON : ";" > { System.out.print("\n");}
+TOKEN : /* OPERATOR */
+{
+   < ARROW : "->" >
 }
 
 TOKEN: 
 {
-  	< FUNC : (["a"-"z"] | < DIGIT >)+ >
-|	< PARA : (< IDENTIFIER >|< INPUT_NUMBER >)+ (","<INPUT_NUMBER>|","<IDENTIFIER>)* > 
-| 	< IDENTIFIER : (["a"-"z"])+(<DIGIT>)* >
+  	< PARA : (< IDENTIFIER >|< INPUT_NUMBER >)(","<INPUT_NUMBER>|","<IDENTIFIER>)* > 
+| 	< IDENTIFIER : (["a"-"z"])+(<DIGIT>)* > 
+| 	< FUNC : ["a"-"z"](["a"-"z"] | < DIGIT >)+ >
 | 	< INPUT_NUMBER : "["(< DIGIT >)+(","< DIGIT>)*"]" >
-|   < NUMBER : (< DIGIT >)+ >
-| 	< #DIGIT : [ "0"-"9" ] >
+|  < NUMBER : (< DIGIT >)+ >
+| 	< DIGIT : [ "0"-"9" ] >
 }
-string start() :{
-	string result, std_num;
-}{  < GRAPH > (std_num = <NUMBER >) "(" < IDENTIFIER > ")" < ARROW > "(" < IDENTIFIER > ")"
-  "{"
-   	
-		a = < RESULT > " " < NUMBER > " ("  < PARA >  ")"  < ARROW >  "("  < PARA > ")"
-		a += body() {
-		  	return a;
-		}
 
-  "}"}string body() :{
-	string var,func,para; 
-}{  ((var = < IDENTIFIER >)"="(func = <FUNC>)"(" para = < PARA > ");")*
-  {
-    return var;  }}
+String start() :
+{
+	String result, commands;
+	Token num, inputs, outputs;
+}
+{
+  < GRAPH > (num = <NUMBER >) "(" (inputs = < PARA >) ")" < ARROW > "("(outputs = < PARA >)")"
+  "{"  (commands = body())  "}" {
+		result = "Result" + " " + num.toString() + "(" + inputs.toString() + ") - > ("+ outputs.toString() + ")" + "\n { "+commands+" }";
+		return result;	 	
+  }
+}
+
+String body() :
+{
+	Token var,para;
+	String function, command = "";
+	
+}
+{
+    (var= < PARA >) "=" function=func() {
+			command = command + var.toString() + "=" + function;
+			return command;
+ 	 	}
+}
+
+String func() :
+{
+  Token para;
+  String a;
+}
+{
+  	(< RESHAPE >"(" para = < PARA > ");") {
+	a = "tf.reshape(" + para.toString() +")\n\n" ;
+	return a;
+	}
+|
+	(< VARIABLE >"(" para = < PARA > ");") {
+		a  ="tf.Variable(tf.random_noraml(" + para.toString() +")\n" ;
+		return a;	
+	}
+|
+	(< CONV >"(" para = < PARA > ");") {
+		a = "tf.nn.conv2d(" + para.toString() +")\n" ;
+		return a;
+	}
+|
+	(< ADD >"(" para = < PARA > ");") {
+			 a = "tf.add(" + para.toString() +")\n" ;
+			 return a;
+	}
+|
+	(< MAX_POOL >"(" para = < PARA > ");") {
+			a = "tf.nn.max_pool(" + para.toString() +")\n" ;
+			return a; 
+	}
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
