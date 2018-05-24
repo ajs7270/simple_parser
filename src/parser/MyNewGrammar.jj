@@ -4,26 +4,31 @@
   LOOKAHEAD = 2;}PARSER_BEGIN(Parser)package parser;
 
 public class Parser{  public static void main(String args []) throws ParseException  {    Parser parser = new Parser(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("graph 20160237 (inputs) -> (outputs) {...} :");
-      try      {	     System.out.println(Parser.start());      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        MyNewGrammar.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}PARSER_END(Parser)SKIP :{  " "| "\r"| "\t"| "\n"}TOKEN : /* NNEF IDENTIFIER */{ 	< GRAPH : "graph" >
+      try      {	     Parser.start();      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        MyNewGrammar.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}PARSER_END(Parser)SKIP :{  " "| "\r"| "\t"| "\n"}TOKEN : /* NNEF IDENTIFIER */{ 	< GRAPH : "graph" >
 | 	< RESHAPE : "reshape" >
 |	< VARIABLE : "variable" >
 | 	< CONV : "conv" >
 | 	< ADD : "add" >
 | 	< RELU : "relu" >
-| 	< MAX_POOL: "max_pool" >}
+| 	< MAX_POOL: "max_pool" >}
+
 TOKEN : /*TF IDENTIFIER*/
-{
-  	< RESULT : "result" >
+ {
+	< RESULT : "result" >
  | 	< TF_RESHAPE : "tf.reshape" >
  | 	< TF_VARIABLE : "tf.Variable" >
  | 	< TF_RANDOM_NORMAL : "tf.random_normal" >
  |  < TF_CONV : "tf.nn.conv2d" >
  |  < TF_ADD : "tf.add" >
- | 	< TF_MAX_POOL : "tf.max_pool" >}TOKEN : /* OPERATOR */{   	< ARROW : "->" >}
+ | 	< TF_MAX_POOL : "tf.max_pool" >}
+
+TOKEN : /* OPERATOR */{   	< ARROW : "->" >
+| 	< SEMICOLON : ";" > { System.out.print("\n");}
+}
 
 TOKEN: 
 {
-  	< FUNC : < IDENTIFIER > >
+  	< FUNC : (["a"-"z"] | < DIGIT >)+ >
 |	< PARA : (< IDENTIFIER >|< INPUT_NUMBER >)+ (","<INPUT_NUMBER>|","<IDENTIFIER>)* > 
 | 	< IDENTIFIER : (["a"-"z"])+(<DIGIT>)* >
 | 	< INPUT_NUMBER : "["(< DIGIT >)+(","< DIGIT>)*"]" >
@@ -31,10 +36,15 @@ TOKEN:
 | 	< #DIGIT : [ "0"-"9" ] >
 }
 string start() :{
-	string a;
-}{  < GRAPH > <NUMBER > "(" < IDENTIFIER > ")" < ARROW > "(" < IDENTIFIER > ")"
+	string result, std_num;
+}{  < GRAPH > (std_num = <NUMBER >) "(" < IDENTIFIER > ")" < ARROW > "(" < IDENTIFIER > ")"
   "{"
-		a = body() {return a}
+   	
+		a = < RESULT > " " < NUMBER > " ("  < PARA >  ")"  < ARROW >  "("  < PARA > ")"
+		a += body() {
+		  	return a;
+		}
+
   "}"}string body() :{
 	string var,func,para; 
 }{  ((var = < IDENTIFIER >)"="(func = <FUNC>)"(" para = < PARA > ");")*
